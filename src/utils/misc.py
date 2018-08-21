@@ -46,15 +46,15 @@ def ssim_filter(path_in, path_out, ref_image_path, threshold, tolerance):
       ref_image_path: path of the reference image
       threshold: absolute SSIM score 
       tolerance: additional tolerance on SSIM score.
-    
+
     """
     ref_image = cv2.imread(ref_image_path)
     tolerance_max = threshold + tolerance
     tolerance_min = threshold - tolerance
     create_nonexistent_dir(path_out)
     for img in os.listdir(path_in):
-        if img.endswith(EXTENSION):                
-            image_path = os.path.join(path_in,img)
+        if img.endswith(EXTENSION):
+            image_path = os.path.join(path_in, img)
             image = cv2.imread(image_path)
             score = compare_ssim(ref_image, image, multichannel=True)
             if tolerance == 0 and score <= threshold:
@@ -81,7 +81,7 @@ def timestamp_filter(path_in, path_out, timezone, city_name):
       city_name: string e.g. 'London' where the picture was taken
     timezone and city_name have to match those in 
     the Astral database. Check https://astral.readthedocs.io/en/latest/
-    
+
     """
     tz = pytz.timezone(timezone)
     a = Astral()
