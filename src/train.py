@@ -33,13 +33,15 @@ args = sys.argv
 parser = argparse.ArgumentParser(
     description="""Train an SVM using images from a given directory containing subdirectories
     whose names will be used as labels: python train_svm.py ~/dir/subdir_containing_imgs/""")
-parser.add_argument('training_dataset_path', type=str,
-                    help='Specify the path of the directory containing subdirectories with the training dataset')
+parser.add_argument('-p', '--path', type=str, metavar='', required=True,
+                    help='Specify the path of the directory containing ' +
+                    ' subdirectories with the training dataset')
 args = parser.parse_args()
 features = []
 labels = []
 number_of_images = 0
-for directory in glob(args.training_dataset_path + '*'):
+TRAINING_PATH = args.path
+for directory in glob(TRAINING_PATH + '*'):
     if os.path.isdir(directory):
         print "TRAINING ON " + directory
         for img in os.listdir(directory):
