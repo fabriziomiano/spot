@@ -1,3 +1,11 @@
+"""
+This script filters a dataset of images 
+in a given path using the SSIM score
+against a reference image and copies
+the images that pass a certain threshold
+and tolerance to a selected output path 
+
+"""
 from utils.misc import ssim_filter
 import argparse
 import sys

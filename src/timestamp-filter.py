@@ -1,5 +1,11 @@
 """
-This script filter a given dataset 
+This script filters a dataset of images 
+in a given path using timestamp information
+from the file names. 
+Please refer to the timestamp_filter() 
+function in utils/misc.py for additional info.
+It copies the images that pass the selection
+to a given output path. 
 
 """
 from utils.misc import timestamp_filter
