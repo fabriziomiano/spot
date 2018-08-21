@@ -32,15 +32,13 @@ import numpy as np
 args = sys.argv
 parser = argparse.ArgumentParser(
     description="""Predict labels for images within a given directory""")
-parser.add_argument('test_path',
-                    type=str,
+parser.add_argument('-p', '--path', type=str, metavar='',
                     help='Specify the path of the directory containing images to label')
-parser.add_argument('svm_file',
-                    type=str,
+parser.add_argument('-f', '--file', type=str, metavar='',
                     help='Specify the file containing the SVM')
 args = parser.parse_args()
-TEST_DIR = args.test_path
-SVM_FILE = args.svm_file
+TEST_DIR = args.path
+SVM_FILE = args.file
 results = defaultdict(dict)
 try:
     clf = joblib.load(SVM_FILE)
