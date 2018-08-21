@@ -1,5 +1,6 @@
 from sklearn import svm
 from sklearn.cluster import KMeans
+from skimage.measure import compare_ssim
 from matplotlib import pyplot as plt
 from glob import glob
 from astral import Astral
@@ -24,7 +25,7 @@ def create_nonexistent_dir(path, exc_raise=False):
     """
     try:
         os.makedirs(path)
-        print("Created directory with path: %s\n", path)
+        print "Created directory with path: " + str(path)
         return path
     except OSError as e:
         if e.errno != errno.EEXIST:
@@ -34,28 +35,61 @@ def create_nonexistent_dir(path, exc_raise=False):
         return None
 
 
-def timestamp_filter(path, timezone, city_name):
+def ssim_filter(path_in, path_out, ref_image_path, threshold, tolerance):
     """
-    Copy images, whose filenames are a timestamp 
-    of the form  %Y-%m-%d-%H-%M-%S,
-    from a given path to a directory called 
-    'timestamp_filtered' which is created within 
-    the current working directory. 
+    Filter dataset of images based on the 
+    SSIM score against a reference image
 
     Arguments: 
-      - path where the dataset is
-      - timezone, string e.g. 'Europe/London'
-      - city_name, string e.g. 'London'
+      path__in: origin path of the dataset
+      path_out: destination path of the filtered dataset
+      ref_image_path: path of the reference image
+      threshold: absolute SSIM score 
+      tolerance: additional tolerance on SSIM score.
+    
     """
-    cwd = os.getcwd()
-    bst = pytz.timezone(timezone)
+    ref_image = cv2.imread(ref_image_path)
+    tolerance_max = threshold + tolerance
+    tolerance_min = threshold - tolerance
+    create_nonexistent_dir(path_out)
+    for img in os.listdir(path_in):
+        if img.endswith(EXTENSION):                
+            image_path = os.path.join(path_in,img)
+            image = cv2.imread(image_path)
+            score = compare_ssim(ref_image, image, multichannel=True)
+            if tolerance == 0 and score <= threshold:
+                shutil.copy(path_in + img, path_out)
+                print img + " scored: " + str(round(score, 2))
+                print "COPYING " + img + " to " + path_out
+            elif tolerance_min < score < tolerance_max:
+                shutil.copy(path_in + img, path_out)
+                print img + " scored: " + str(round(score, 2))
+                print "COPYING " + img + " to " + path_out
+
+
+def timestamp_filter(path_in, path_out, timezone, city_name):
+    """
+    Filter dataset of images based on 
+    timestamp contained in filename
+    of the form, e.g. 1529293200_0_2018-06-18-04-40-00.jpg
+    DATE_FMT = "%Y-%m-%d-%H-%M-%S" (check settings/constants.py)
+
+    Arguments: 
+      path_in: origin path of the dataset
+      path_out: destination path of the filtered dataset
+      timezone: string e.g. 'Europe/London' of the filename
+      city_name: string e.g. 'London' where the picture was taken
+    timezone and city_name have to match those in 
+    the Astral database. Check https://astral.readthedocs.io/en/latest/
+    
+    """
+    tz = pytz.timezone(timezone)
     a = Astral()
     a.solar_depression = 'civil'
     city = a[city_name]
-    outdir = os.path.join(cwd, 'timestamp_filtered')
-    create_nonexistent_dir(outdir)
-    for img in os.listdir(path):
-        if img.endswith('.jpg'):
+    create_nonexistent_dir(path_out)
+    for img in os.listdir(path_in):
+        if img.endswith(EXTENSION):
             year = img.split('_')[2].split('-')[0]
             month = img.split('-')[1]
             day = img.split('-')[2]
@@ -63,11 +97,11 @@ def timestamp_filter(path, timezone, city_name):
             sun = city.sun(date=img_date, local=True)
             ts = img.split('_')[2].strip(EXTENSION)
             timestamp_unaware = dt.datetime.strptime(ts, DATE_FMT)
-            timestamp = bst.localize(timestamp_unaware)
-
+            timestamp = tz.localize(timestamp_unaware)
             if sun['dawn'] < timestamp < sun['sunrise'] or\
                     sun['sunset'] < timestamp < sun['dusk']:
-                shutil.copy(path + img, outdir)
+                shutil.copy(path_in + img, path_out)
+                print "COPYING " + img + " to " + path_out
 
 
 def load_image(path):
