@@ -45,11 +45,11 @@ results = defaultdict(dict)
 try:
     clf = joblib.load(SVM_FILE)
     print "File " + SVM_FILE + " read succesfully"
-    print "Classifying images..."
 except IOError as e:
-    print "File " + SVM_FILE + " not a valid file. Please retrain"
+    print "File " + SVM_FILE + " is not a valid file. Please retrain"
     raise
 classes = clf.classes_
+print "Classifying images..."
 for img in os.listdir(TEST_DIR):
     if img.endswith(EXTENSION):
         img_path = os.path.join(TEST_DIR, img)
