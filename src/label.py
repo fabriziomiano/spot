@@ -1,7 +1,7 @@
 """
 This script loads an SVM previously trained, 
 reads images from a given path, 
-extracts their features and classifies them. 
+extracts their features to then perform the classification
 It then writes a json file with the following structure:
 {
     "img": {
@@ -20,11 +20,11 @@ where :
 
 """
 
-from settings.constants import EXTENSION, N_CLUSTERS, JSON_PATH
-from utils.misc import load_image, crop_to_half, fex, save_json
+from utils.misc import load_image, load_config, crop_to_half, fex, save_json
 from sklearn.externals import joblib
 from collections import defaultdict
 import argparse
+import ConfigParser
 import sys
 import os
 import numpy as np
@@ -32,31 +32,37 @@ import numpy as np
 args = sys.argv
 parser = argparse.ArgumentParser(
     description="""Predict labels for images within a given directory""")
-parser.add_argument('-p', '--path', type=str, metavar='',
-                    help='Specify the path of the directory containing images to label')
-parser.add_argument('-f', '--file', type=str, metavar='',
-                    help='Specify the file containing the SVM')
+parser.add_argument('-c', '--config', type=str, metavar='', required=True,
+                    help='Specify the path of the configuration file')
 args = parser.parse_args()
-TEST_DIR = args.path
-SVM_FILE = args.file
+CONFIG_PATH = args.config
+Config = load_config(CONFIG_PATH)
+if len(Config.sections()) == 0:
+    print "ERROR :: Not a valid configuration file. Exiting"
+    sys.exit(0)
+
+TEST_DIR = Config.get('CLASSIFICATION', 'TEST_DIR')
+SVM_FILENAME = Config.get('COMMON', 'SVM_FILENAME')
+EXTENSION = Config.get('COMMON', 'EXTENSION')
+N_CLUSTERS = int(Config.get('COMMON', 'N_CLUSTERS'))
 results = defaultdict(dict)
 try:
-    clf = joblib.load(SVM_FILE)
-    print "File " + SVM_FILE + " read succesfully"
+    clf = joblib.load(SVM_FILENAME)
+    print "INFO :: File " + SVM_FILENAME + " read succesfully"
 except IOError as e:
-    print "File " + SVM_FILE + " is not a valid file. Please retrain"
+    print "ERROR :: " + SVM_FILENAME + " is not a valid file. Please retrain or check che configuration file"
     raise
 classes = clf.classes_
-print "Classifying images..."
+print "INFO :: Classifying images..."
 for img in os.listdir(TEST_DIR):
     if img.endswith(EXTENSION):
         img_path = os.path.join(TEST_DIR, img)
         image = load_image(img_path)
-        # uncomment the line below if sky is always approximately in the upper half of the images
-        # image = crop_to_half(image)
         test_feature = fex(image, N_CLUSTERS)
         probabilities = clf.predict_proba([test_feature])
         for i, c in enumerate(classes):
             results[img][c] = round(probabilities[0][i], 3)
-save_json(JSON_PATH, results)
-print "Results saved in " + JSON_PATH
+JSON_FILENAME = Config.get('CLASSIFICATION', 'JSON_FILENAME')
+json_path = os.path.join(os.getcwd(), JSON_FILENAME)
+save_json(json_path, results)
+print "INFO :: Results saved in " + json_path
