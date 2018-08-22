@@ -5,8 +5,8 @@ from matplotlib import pyplot as plt
 from glob import glob
 from astral import Astral
 from pytz import timezone
-from settings.constants import DATE_FMT, EXTENSION
 from sklearn.model_selection import GridSearchCV
+import ConfigParser
 import pytz
 import shutil
 import os
@@ -17,6 +17,12 @@ import numpy as np
 import datetime as dt
 
 
+def load_config(path):
+    Config = ConfigParser.ConfigParser()
+    Config.read(path)
+    return Config
+
+
 def create_nonexistent_dir(path, exc_raise=False):
     """
     Create directory from given path
@@ -25,17 +31,17 @@ def create_nonexistent_dir(path, exc_raise=False):
     """
     try:
         os.makedirs(path)
-        print "Created directory with path: " + str(path)
+        print "INFO :: Created directory with path: " + str(path)
         return path
     except OSError as e:
         if e.errno != errno.EEXIST:
-            print("Could not create directory with path: %s\n", path)
+            print("ERROR :: Could not create directory with path: %s\n", path)
             if exc_raise:
                 raise
         return None
 
 
-def ssim_filter(path_in, path_out, ref_image_path, threshold, tolerance):
+def ssim_filter(config_path, path_in, path_out, ref_image_path, threshold):
     """
     Filter dataset of images based on the 
     SSIM score against a reference image
@@ -45,29 +51,24 @@ def ssim_filter(path_in, path_out, ref_image_path, threshold, tolerance):
       path_out: destination path of the filtered dataset
       ref_image_path: path of the reference image
       threshold: absolute SSIM score 
-      tolerance: additional tolerance on SSIM score.
 
     """
+    Config = load_config(config_path)
+    EXTENSION = Config.get('COMMON', 'EXTENSION')
     ref_image = cv2.imread(ref_image_path)
-    tolerance_max = threshold + tolerance
-    tolerance_min = threshold - tolerance
     create_nonexistent_dir(path_out)
     for img in os.listdir(path_in):
         if img.endswith(EXTENSION):
             image_path = os.path.join(path_in, img)
             image = cv2.imread(image_path)
             score = compare_ssim(ref_image, image, multichannel=True)
-            if tolerance == 0 and score <= threshold:
-                shutil.copy(path_in + img, path_out)
-                print img + " scored: " + str(round(score, 2))
-                print "COPYING " + img + " to " + path_out
-            elif tolerance_min < score < tolerance_max:
-                shutil.copy(path_in + img, path_out)
-                print img + " scored: " + str(round(score, 2))
-                print "COPYING " + img + " to " + path_out
+            if score <= threshold:
+                shutil.copy(image_path, path_out)
+                print "INFO :: " + img + " scored: " + str(round(score, 2)) +\
+                    "\n\tCopying to " + path_out
 
 
-def timestamp_filter(path_in, path_out, timezone, city_name):
+def timestamp_filter(config_path, path_in, path_out, timezone, city_name):
     """
     Filter dataset of images based on 
     timestamp contained in filename
@@ -83,6 +84,9 @@ def timestamp_filter(path_in, path_out, timezone, city_name):
     the Astral database. Check https://astral.readthedocs.io/en/latest/
 
     """
+    Config = load_config(config_path)
+    EXTENSION = Config.get('COMMON', 'EXTENSION')
+    DATE_FMT = Config.get('COMMON', 'DATE_FMT')
     tz = pytz.timezone(timezone)
     a = Astral()
     a.solar_depression = 'civil'
@@ -90,6 +94,7 @@ def timestamp_filter(path_in, path_out, timezone, city_name):
     create_nonexistent_dir(path_out)
     for img in os.listdir(path_in):
         if img.endswith(EXTENSION):
+            image_path = os.path.join(path_in, img)
             year = img.split('_')[2].split('-')[0]
             month = img.split('-')[1]
             day = img.split('-')[2]
@@ -100,8 +105,8 @@ def timestamp_filter(path_in, path_out, timezone, city_name):
             timestamp = tz.localize(timestamp_unaware)
             if sun['dawn'] < timestamp < sun['sunrise'] or\
                     sun['sunset'] < timestamp < sun['dusk']:
-                shutil.copy(path_in + img, path_out)
-                print "COPYING " + img + " to " + path_out
+                shutil.copy(image_path, path_out)
+                print "INFO :: Copying " + img + " to " + path_out
 
 
 def load_image(path):
@@ -201,11 +206,11 @@ def svc_param_selection(features, labels):
     return par
 
 
-def save_json(path, dictionary):
+def save_json(file_path, dictionary):
     """
     Save a json file in a given path
 
     """
-    f = open(path, 'w')
+    f = open(file_path, 'w')
     loader = json.dump(dictionary, f, indent=4, separators=(',', ': '))
     f.close()
