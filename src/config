@@ -1,21 +1,25 @@
-[SSIM]
-PATH_IN = /Users/frodo/Desktop/timestamp-selected-sunset
-PATH_OUT = /Users/frodo/Desktop/config-try/
-REF_IMG_PATH = /Users/frodo/Desktop/timestamp-selected-sunset/1529526600_0_2018-06-20-21-30-00.jpg
-THRESHOLD = 0.6
-
 [TIMESTAMP]
 PATH_IN = /Users/frodo/Documents/placement/7day-thumbnails
-PATH_OUT = /Users/frodo/Desktop/timestamp-selected-sunset
+PATH_OUT = /Users/frodo/Desktop/timestamp-filtered
 TIMEZONE = Europe/London
 CITY_NAME = London
 
+
 [TRAINING]
-TRAINING_PATH = /Users/frodo/tf_files/deckchair
+TRAINING_PATH = /Users/frodo/tf_files/training
+
 
 [CLASSIFICATION]
-TEST_DIR = /Users/frodo/Desktop/timestamp-selected-sunset
+TEST_DIR = /Users/frodo/Desktop/timestamp-filtered/
 JSON_FILENAME = classification.json
+
+
+[SSIM]
+PATH_IN = /Users/frodo/Desktop/timestamp-filtered
+PATH_OUT = /Users/frodo/Desktop/SSIM-filtered
+REF_IMG_PATH = /Users/frodo/Desktop/timestamp-filtered/1529292600_0_2018-06-18-04-30-00.jpg
+THRESHOLD = 0.5
+
 
 [COMMON]
 SVM_FILENAME = svm.pkl
