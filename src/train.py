@@ -18,11 +18,11 @@ is then performed and the results are saved in a .pkl file
 
 """
 
-from utils.misc import load_image, fex, svc_param_selection
-from settings.constants import EXTENSION, N_CLUSTERS, SVM_FILENAME
+from utils.misc import load_image, load_config, fex, svc_param_selection
 from sklearn.externals import joblib
 from sklearn import svm
 from glob import glob
+import ConfigParser
 import argparse
 import os
 import sys
@@ -32,18 +32,27 @@ import numpy as np
 args = sys.argv
 parser = argparse.ArgumentParser(
     description="""Train an SVM using images from a given directory containing subdirectories
-    whose names will be used as labels: python train_svm.py ~/dir/subdir_containing_imgs/""")
-parser.add_argument('-p', '--path', type=str, metavar='', required=True,
-                    help='Specify the path of the directory containing ' +
-                    ' subdirectories with the training dataset')
+    whose names will be used as labels""")
+parser.add_argument('-c', '--config', type=str, metavar='', required=True,
+                    help='Specify the path of the configuration file')
 args = parser.parse_args()
+CONFIG_PATH = args.config
+Config = load_config(CONFIG_PATH)
+if len(Config.sections()) == 0:
+    print "ERROR :: Not a valid configuration file. Exiting"
+    sys.exit(0)
+
 features = []
 labels = []
 number_of_images = 0
-TRAINING_PATH = args.path
-for directory in glob(TRAINING_PATH + '*'):
+TRAINING_PATH = Config.get('TRAINING', 'TRAINING_PATH')
+EXTENSION = Config.get('COMMON', 'EXTENSION')
+N_CLUSTERS = int(Config.get('COMMON', 'N_CLUSTERS'))
+SVM_FILENAME = Config.get('COMMON', 'SVM_FILENAME')
+pattern = os.path.join(TRAINING_PATH, '*')
+for directory in glob(pattern):
     if os.path.isdir(directory):
-        print "TRAINING ON " + directory
+        print "INFO :: Training on " + directory
         for img in os.listdir(directory):
             if img.endswith(EXTENSION):
                 img_path = os.path.join(directory, img)
@@ -55,14 +64,14 @@ for directory in glob(TRAINING_PATH + '*'):
                 number_of_images += 1
 features = np.array(features)
 labels = np.array(labels)
-print "Images read: " + str(number_of_images)
-print "Features per image extracted: " + str(features.shape[1])
-print "Labels saved: " + str(len(labels))
+print "INFO :: Images read: " + str(number_of_images)
+print "INFO :: Features per image extracted: " + str(features.shape[1])
+print "INFO :: Labels saved: " + str(len(labels))
 par = svc_param_selection(features, labels)
 clf = svm.SVC(C=par['C'],
               gamma=par['gamma'],
               probability=True)
-print "Fitting the data"
+print "INFO :: Fitting the data"
 clf.fit(features, labels)
 joblib.dump(clf, SVM_FILENAME)
-print "SVM saved in " + SVM_FILENAME
+print "INFO :: SVM saved in " + SVM_FILENAME
