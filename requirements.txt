@@ -9,7 +9,6 @@ DateTime==4.2
 decorator==4.3.0
 idna==2.7
 kiwisolver==1.0.1
-matplotlib==2.2.3
 networkx==2.1
 numpy==1.15.1
 opencv-python==3.4.2.17
