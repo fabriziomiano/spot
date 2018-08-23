@@ -41,14 +41,13 @@ Config = load_config(CONFIG_PATH)
 if len(Config.sections()) == 0:
     print "ERROR :: Not a valid configuration file. Exiting"
     sys.exit(0)
-
 features = []
 labels = []
 number_of_images = 0
 TRAINING_PATH = Config.get('TRAINING', 'TRAINING_PATH')
 EXTENSION = Config.get('COMMON', 'EXTENSION')
 N_CLUSTERS = int(Config.get('COMMON', 'N_CLUSTERS'))
-SVM_FILENAME = Config.get('COMMON', 'SVM_FILENAME')
+SVM_PATH = Config.get('COMMON', 'SVM_PATH')
 pattern = os.path.join(TRAINING_PATH, '*')
 for directory in glob(pattern):
     if os.path.isdir(directory):
@@ -66,12 +65,11 @@ features = np.array(features)
 labels = np.array(labels)
 print "INFO :: Images read: " + str(number_of_images)
 print "INFO :: Features per image extracted: " + str(features.shape[1])
-print "INFO :: Labels saved: " + str(len(labels))
 par = svc_param_selection(features, labels)
 clf = svm.SVC(C=par['C'],
               gamma=par['gamma'],
               probability=True)
 print "INFO :: Fitting the data"
 clf.fit(features, labels)
-joblib.dump(clf, SVM_FILENAME)
-print "INFO :: SVM saved in " + SVM_FILENAME
+joblib.dump(clf, SVM_PATH)
+print "INFO :: SVM saved in " + SVM_PATH
