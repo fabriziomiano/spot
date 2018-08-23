@@ -2,7 +2,7 @@
 This script loads an SVM previously trained, 
 reads images from a given path, 
 extracts their features to then perform the classification
-It then writes a json file with the following structure:
+and finally writes a json file with the following structure:
 {
     "img": {
         "class 0": probability[0],
@@ -41,28 +41,30 @@ if len(Config.sections()) == 0:
     print "ERROR :: Not a valid configuration file. Exiting"
     sys.exit(0)
 
-TEST_DIR = Config.get('CLASSIFICATION', 'TEST_DIR')
-SVM_FILENAME = Config.get('COMMON', 'SVM_FILENAME')
+SVM_PATH = Config.get('COMMON', 'SVM_PATH')
 EXTENSION = Config.get('COMMON', 'EXTENSION')
 N_CLUSTERS = int(Config.get('COMMON', 'N_CLUSTERS'))
+TEST_DIR = Config.get('CLASSIFICATION', 'TEST_DIR')
 results = defaultdict(dict)
+n_images = 0
 try:
-    clf = joblib.load(SVM_FILENAME)
-    print "INFO :: File " + SVM_FILENAME + " read succesfully"
+    clf = joblib.load(SVM_PATH)
+    print "INFO :: File " + SVM_PATH + " read succesfully"
+    classes = clf.classes_
+    print "INFO :: Classifying images in " + TEST_DIR
+    for img in os.listdir(TEST_DIR):
+        if img.endswith(EXTENSION):
+            img_path = os.path.join(TEST_DIR, img)
+            image = load_image(img_path)
+            test_feature = fex(image, N_CLUSTERS)
+            probabilities = clf.predict_proba([test_feature])
+            for i, c in enumerate(classes):
+                results[img][c] = round(probabilities[0][i], 3)
+            n_images += 1
+    JSON_FILENAME = Config.get('CLASSIFICATION', 'JSON_FILENAME')
+    json_path = os.path.join(os.getcwd(), JSON_FILENAME)
+    save_json(json_path, results)
+    print "INFO :: " + str(n_images) + " images classified"
+    print "INFO :: Results saved in " + json_path
 except IOError as e:
-    print "ERROR :: " + SVM_FILENAME + " is not a valid file. Please retrain or check che configuration file"
-    raise
-classes = clf.classes_
-print "INFO :: Classifying images..."
-for img in os.listdir(TEST_DIR):
-    if img.endswith(EXTENSION):
-        img_path = os.path.join(TEST_DIR, img)
-        image = load_image(img_path)
-        test_feature = fex(image, N_CLUSTERS)
-        probabilities = clf.predict_proba([test_feature])
-        for i, c in enumerate(classes):
-            results[img][c] = round(probabilities[0][i], 3)
-JSON_FILENAME = Config.get('CLASSIFICATION', 'JSON_FILENAME')
-json_path = os.path.join(os.getcwd(), JSON_FILENAME)
-save_json(json_path, results)
-print "INFO :: Results saved in " + json_path
+    print "ERROR :: " + SVM_PATH + " not found."
