@@ -1,7 +1,6 @@
 from sklearn import svm
 from sklearn.cluster import KMeans
 from skimage.measure import compare_ssim
-from matplotlib import pyplot as plt
 from glob import glob
 from astral import Astral
 from pytz import timezone
