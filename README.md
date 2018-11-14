@@ -32,13 +32,17 @@ where `<mode>` has to be set to "quick". The other mode is "full", and it runs t
 
 ### TIMESTAMP SELECTION:
 The tool is designed to read images whose file names are date stings with a format specified in the conf file 
+
 `DATE_FMT = %Y-%m-%d-%H-%M-%S` 
+
 Change this at your own risk. The code hasn't been run with any other format.
 
 In the `TIMESTAMP` section of the conf file: 
  - Specify `PATH_IN`, `PATH_OUT`, `TIMEZONE`, and `CITY_NAME`. 
 
-Run within repo main dir ```python src/timestamp-filter.py -c <path/to/config-file>```
+Run within repo main dir 
+
+```python src/timestamp-filter.py -c <path/to/config-file>```
 
 ### SVM
 #### Training
