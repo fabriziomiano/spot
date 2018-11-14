@@ -26,7 +26,9 @@ In the `COMMON` section of the conf file, specify `EXTENSION` of the image to be
 In the `SSIM` section of the conf file: 
  - Specify `PATH_IN`, `PATH_OUT`, `REF_IMG_PATH`, and `THRESHOLD`.
 
-Run ```source select.sh <path/to/config-file> <mode>``` where `<mode>` has to be set to "quick". The other mode is "full", and it runs the timestamp selector first, then the ssim. 
+Run 
+```source select.sh <path/to/config-file> <mode>``` 
+where `<mode>` has to be set to "quick". The other mode is "full", and it runs the timestamp selector first, then the ssim. 
 
 ### TIMESTAMP SELECTION:
 The tool is designed to read images whose file names are date stings with a format specified in the conf file 
@@ -52,4 +54,5 @@ Run ```source trainSVM.sh <path/to/config-file>```
 In the `CLASSIFICATION` section of the conf file: 
  - specify `TEST_DIR` (directory with images to be classified) 
  - specify `JSON_FILENAME` (file with results) 
+
 Run ```source classify.sh <path/to/config-file>```
