@@ -15,7 +15,7 @@ It utilises:
 scipy scikit-image opencv-python sklearn numpy astral pytz datetime
 
 ## How to use
-Create a python2.7 virtual environment following [this](https://docs.python.org/3/tutorial/venv.html).
+Create a Python3 virtual environment following [this](https://docs.python.org/3/tutorial/venv.html).
 Within the virtual environment
 ```pip install -r requirements.txt```
 
